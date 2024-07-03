@@ -1,20 +1,40 @@
 name: Sync Fork
-
 on:
   schedule:
-    - cron: '0 0 * * MON' # every 30 minutes
-  workflow_dispatch: # on button click
+    - cron: '36 1 * * MON' # Scheduled to run at 1:36 AM on Mondays
+  workflow_dispatch: # On button click
 
 jobs:
-  sync:
-
+  sync-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fixed delay to run at 1:36 AM
-        run: sleep 5760 
-      - uses: tgymnich/fork-sync@v1.8
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Sync Fork
+        uses: tgymnich/fork-sync@v1.8
         with:
           owner: enthec
           base: main
           head: main
+
+      - name: Create Tag
+        id: create_tag
+        run: |
+          TAG_NAME="sync-$(date +'%Y%m%d%H%M%S')"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          echo "::set-output name=tag::$TAG_NAME"
+
+      - name: Create Release
+        uses: actions/create-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag }}
+          release_name: ${{ steps.create_tag.outputs.tag }}
+          body: "Automated release after sync"
+          draft: false
+          prerelease: false
+
