@@ -1,33 +1,40 @@
-name: Sync with original repo
+name: Sync Fork and Create Release
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs every day at midnight UTC
-  push:
-    branches:
-      - main # Change this to your default branch
+    - cron: '36 1 * * MON' # Scheduled to run at 1:36 AM on Mondays
+  workflow_dispatch: # On button click
 
 jobs:
-  sync:
+  sync-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout our repo
-        uses: actions/checkout@v3
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Sync Fork
+        uses: tgymnich/fork-sync@v1.8
         with:
-          repository: offensity/webappanalyzer
-          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: enthec
+          base: main
+          head: main
 
-      - name: Add the original repo as a remote
-        run: git remote add upstream https://github.com/enthec/webappanalyzer.git
+      - name: Create Tag
+        id: create_tag
+        run: |
+          TAG_NAME="sync-$(date +'%Y%m%d%H%M%S')"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          echo "::set-output name=tag::$TAG_NAME"
 
-      - name: Fetch the original repo
-        run: git fetch upstream
-
-      - name: Merge changes from the original repo
-        run: git merge upstream/main # Change 'main' if the original repo has a different default branch
-
-      - name: Push changes to our repo
-        run: git push origin main # Change 'main' to your default branch if needed
+      - name: Create Release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag }}
+          release_name: ${{ steps.create_tag.outputs.tag }}
+          body: "Automated release after sync"
+          draft: false
+          prerelease: false
