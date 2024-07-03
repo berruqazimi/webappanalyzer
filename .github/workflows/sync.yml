@@ -15,7 +15,7 @@ jobs:
       - name: Checkout our repo
         uses: actions/checkout@v2
         with:
-          repository: offensity/webappanalyzer
+          repository: berruqazimi/webappanalyzer
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add the original repo as a remote
