@@ -1,0 +1,33 @@
+name: Sync with original repo
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight UTC
+  push:
+    branches:
+      - main 
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout our repo
+        uses: actions/checkout@v2
+        with:
+          repository: offensity/webappanalyzer
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add the original repo as a remote
+        run: git remote add upstream https://github.com/enthec/webappanalyzer.git
+
+      - name: Fetch the original repo
+        run: git fetch upstream
+
+      - name: Merge changes from the original repo
+        run: git merge upstream/main 
+
+      - name: Push changes to our repo
+        run: git push origin main 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
