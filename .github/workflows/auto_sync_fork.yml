@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fixed delay to run at 1:36 AM
+        run: sleep 5760 
       - uses: tgymnich/fork-sync@v1.8
         with:
           owner: enthec
